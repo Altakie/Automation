@@ -1,5 +1,6 @@
 from csv import DictReader
 from sys import argv
+import math
 
 
 # -- CONSTANTS --
@@ -23,7 +24,7 @@ except FileNotFoundError:
 with f:
     reader = DictReader(f)
     for row in reader:
-        willingness_to_pay[row["Item"].lower()] = [
+        willingness_to_pay[row["Item"].lower().strip()] = [
             key for key in row if key != "Item" and row[key] == "TRUE"]
 
 
@@ -49,12 +50,19 @@ with f:
     reader = DictReader(f)
     for row in reader:
         # Merge duplicate items
-        item = row["Item"].lower()
-        if item in receipt:
-            receipt[item] += float(row["Price"][1:])
-        else:
-            receipt[item] = float(row["Price"][1:])
+        item = row["Item"].lower().strip()
+        start_index = 0
+        # TODO: make this a better system of checking
+        if row["Item"][start_index] == "$":
+            start_index += 1
 
+        if item in receipt:
+            receipt[item] += float(row["Price"][start_index:])
+        else:
+            receipt[item] = float(row["Price"][start_index:])
+
+# for key in receipt:
+#     print(f"{key} : {receipt[key]}")
 
 # -- Distribution --
 # Read from data structure created by receipt
@@ -68,14 +76,15 @@ people = {}
 
 for item in receipt:
     if item not in willingness_to_pay:
-        print("Item not registered, cannot be properly distributed")
+        print(f"{item} not registered, cannot be properly distributed")
         exit()
 
     # Calculate price per person
 
-    price_with_tax = receipt[item] * (1 + SALES_TAX)
+    # price_with_tax = receipt[item] * (1 + SALES_TAX)
 
-    price_per_person = price_with_tax / len(willingness_to_pay[item])
+
+    price_per_person = receipt[item] / float(len(willingness_to_pay[item]))
 
     for person in willingness_to_pay[item]:
         # Create a new person in the people dict if they are not mapped yet
@@ -104,9 +113,8 @@ receipt_total = 0
 for item in receipt:
     receipt_total += receipt[item]
 
-receipt_total *= (1 + SALES_TAX)
+# receipt_total *= (1 + SALES_TAX)
 
 # print(people_total)
 # print(receipt_total)
-print("Total Added Correctly" if people_total ==
-      receipt_total else "Something went wrong, results invalid")
+print("Total Added Correctly" if math.isclose(people_total, receipt_total, abs_tol= 0.005) else "Something went wrong, results invalid")
