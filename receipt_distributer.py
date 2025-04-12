@@ -3,6 +3,8 @@ from sys import argv
 import math
 
 
+# TODO: Put this into a separate config file
+
 # -- CONSTANTS --
 # Sales tax and other taxes
 SALES_TAX = 0.0625
@@ -53,7 +55,7 @@ with f:
         item = row["Item"].lower().strip()
         start_index = 0
         # TODO: make this a better system of checking
-        if row["Item"][start_index] == "$":
+        while row["Price"][start_index] == "$":
             start_index += 1
 
         if item in receipt:
@@ -74,15 +76,15 @@ with f:
 # For each person, in the corresponding master list, add what they owe
 people = {}
 
+items_registered = True
 for item in receipt:
     if item not in willingness_to_pay:
         print(f"{item} not registered, cannot be properly distributed")
-        exit()
-
+        items_registered = False
+        continue
     # Calculate price per person
 
     # price_with_tax = receipt[item] * (1 + SALES_TAX)
-
 
     price_per_person = receipt[item] / float(len(willingness_to_pay[item]))
 
@@ -92,6 +94,9 @@ for item in receipt:
             people[person] = 0
 
         people[person] += price_per_person
+
+if not items_registered:
+    exit()
 
 # -- Output --
 # For now, can just be a list of people with how much they owe based on the receipt
@@ -117,4 +122,5 @@ for item in receipt:
 
 # print(people_total)
 # print(receipt_total)
-print("Total Added Correctly" if math.isclose(people_total, receipt_total, abs_tol= 0.005) else "Something went wrong, results invalid")
+print("Total Added Correctly" if math.isclose(people_total, receipt_total,
+      abs_tol=0.005) else "Something went wrong, results invalid")
