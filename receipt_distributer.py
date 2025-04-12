@@ -86,7 +86,11 @@ for item in receipt:
 
     # price_with_tax = receipt[item] * (1 + SALES_TAX)
 
-    price_per_person = receipt[item] / float(len(willingness_to_pay[item]))
+    num_payers = len(willingness_to_pay)
+    if num_payers == 0:
+        print(f"No one is willing to pay for {item}")
+        exit()
+    price_per_person = receipt[item] / float(num_payers)
 
     for person in willingness_to_pay[item]:
         # Create a new person in the people dict if they are not mapped yet
